@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Learning Path Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
+
+    <div class="flex h-screen">
+        <aside class="w-1/4 bg-gray-800 p-6 border-r border-gray-700 flex flex-col justify-between">
+            <div>
+                <h2 class="text-xl font-bold text-indigo-400 mb-6">AI Path Generator</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">What do you want to learn?</label>
+                        <input type="text" id="topicInput" placeholder="e.g., Object Oriented C++" class="w-full bg-gray-700 border border-gray-600 rounded p-2 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Your Level</label>
+                        <select id="levelInput" class="w-full bg-gray-700 border border-gray-600 rounded p-2 focus:outline-none focus:border-indigo-500">
+                            <option value="Beginner">Beginner</option>
+                            <option value="Intermediate">Intermediate</option>
+                            <option value="Advanced">Advanced</option>
+                        </select>
+                    </div>
+                    <button onclick="generateNewPath()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2 px-4 rounded transition duration-200">Generate Path</button>
+                </div>
+            </div>
+            <div class="text-xs text-gray-500 text-center">AI Learning Dashboard v2.0</div>
+        </aside>
+
+        <main class="flex-1 p-8 overflow-y-auto">
+            <div id="progressBanner" class="bg-gray-800 p-6 rounded-lg border border-gray-700 mb-8 hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h1 id="dashboardTitle" class="text-2xl font-bold text-white">Select or generate a path to begin</h1>
+                        <p id="totalTimeEstimate" class="text-sm text-gray-400 mt-1"></p>
+                    </div>
+                    <span id="progressText" class="text-2xl font-black text-indigo-400">0%</span>
+                </div>
+                <div class="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
+                    <div id="progressBar" class="bg-indigo-500 h-full transition-all duration-300 ease-out" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div id="roadmapContainer" class="space-y-4">
+                </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
