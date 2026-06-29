@@ -56,6 +56,7 @@ body {
     line-height: 1.15;
     margin-bottom: 1.5rem;
     background: linear-gradient(to right, #ffffff, #9ca3af);
+    background-clip: border-box;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
