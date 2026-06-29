@@ -178,6 +178,29 @@ app.get('/test-ai', async (req, res) => {
     }
 });
 
+
+// 1. Serves your static public folder assets (CSS, JS) cleanly
+app.use('/public', express.static(path.join(__dirname, 'public')));
+
+// 2. Root Route: Visiting http://localhost:3000 instantly serves home.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'home.html'));
+});
+
+// 3. Explicit File Routes so they resolve natively on port 3000
+app.get('/login.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/signup.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'signup.html'));
+});
+
+app.get('/index.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+
 // Start listening for inbound connections (Kept cleanly at the bottom)
 app.listen(PORT, () => {
     console.log(`🚀 PathAI System Server humming along at http://localhost:${PORT}`);

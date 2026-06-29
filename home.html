@@ -6,6 +6,12 @@
     <title>PathAI - Dynamic AI Learning Roadmaps</title>
     <link rel="stylesheet" href="public/css/style.css">
     <link rel="stylesheet" href="public/css/home.css">
+    <script>
+        // Check for active authentication early to avoid marketing loops
+        if (localStorage.getItem('loggedInUser')) {
+            window.location.href = 'index.html';
+        }
+    </script>
 </head>
 <body>
 
