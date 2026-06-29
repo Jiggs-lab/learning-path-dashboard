@@ -3,39 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Account - AI Learning Dashboard</title>
-    <link rel="stylesheet" href="public/css/style.css">
-    <link rel="stylesheet" href="public/css/auth.css">
+    <title>Sign Up - PathAI</title>
+    <link rel="stylesheet" href="/public/css/main.css">
 </head>
 <body>
-
     <div class="auth-wrapper">
         <div class="auth-card">
-            <h2>Create Account</h2>
-            <p class="auth-subtitle">Get personalized learning roadmaps today.</p>
+            <h2 style="margin-bottom: 0.5rem;">Create Account</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem;">Get your personalized roadmaps today.</p>
             
             <form id="signupForm">
                 <div class="form-group">
-                    <label for="userName">Full Name</label>
-                    <input type="text" id="userName" required placeholder="John Doe" autocomplete="name">
+                    <label>Full Name</label>
+                    <input type="text" id="userName" required placeholder="John Doe">
                 </div>
                 <div class="form-group">
-                    <label for="userEmail">Email Address</label>
-                    <input type="email" id="userEmail" required placeholder="you@example.com" autocomplete="email">
+                    <label>Email Address</label>
+                    <input type="email" id="userEmail" required placeholder="you@example.com">
                 </div>
                 <div class="form-group">
-                    <label for="userPassword">Password</label>
-                    <input type="password" id="userPassword" required placeholder="••••••••" autocomplete="new-password">
+                    <label>Password</label>
+                    <input type="password" id="userPassword" required placeholder="••••••••">
                 </div>
-                <button type="submit" id="signupBtn" class="btn-primary">Sign Up</button>
+                <button type="submit" class="btn-primary" style="width: 100%;">Sign Up</button>
             </form>
-
-            <div class="auth-footer">
-                Already have an account? <a href="login.html">Log In</a>
-            </div>
+            <p style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem; color: var(--text-muted);">
+                Already have an account? <a href="/login.html" style="color: var(--primary-hover);">Log In</a>
+            </p>
         </div>
     </div>
-
-    <script src="public/js/auth.js"></script>
+    <script src="/public/js/auth.js"></script>
 </body>
 </html>
