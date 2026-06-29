@@ -1,25 +1,36 @@
-// State Objects Tracking Architecture Configuration Variables
-let globalActiveRoadmap = null;
-let userCompletedIndices = [];
+// Route Guard: Protect the dashboard from unauthorized visitors
+if (!localStorage.getItem('loggedInUser')) {
+    alert("Unauthorized access! Please log in first.");
+    window.location.href = 'login.html'; // Kick them back to the login gateway
+}
 
-// Initialize Dashboard State Configurations via Local Storage on DOM Load
+// State Management Architecture
+let savedPathsCollection = []; // Array holding all generated paths
+let activePathId = null;       // Tracks which path id is currently open in the workspace
+
+// Initialize and pull all saved data portfolios on page load
 document.addEventListener('DOMContentLoaded', () => {
-    const retainedTemplate = localStorage.getItem('active_dashboard_roadmap');
-    const retainedProgress = localStorage.getItem('active_dashboard_progress');
+    const retainedPaths = localStorage.getItem('pathai_all_saved_paths');
+    const retainedActiveId = localStorage.getItem('pathai_active_id');
 
-    if (retainedTemplate) {
-        globalActiveRoadmap = JSON.parse(retainedTemplate);
-        userCompletedIndices = retainedProgress ? JSON.parse(retainedProgress) : [];
-        renderActiveWorkspace();
+    if (retainedPaths) {
+        savedPathsCollection = JSON.parse(retainedPaths);
+        activePathId = retainedActiveId ? parseInt(retainedActiveId) : null;
+        
+        renderSavedPathsList(); // Build the sidebar switcher list
+        
+        if (activePathId) {
+            renderActiveWorkspace();
+        }
+    } else {
+        document.getElementById('progressSectionCard').style.display = 'none';
     }
 });
 
 /**
- * Mocks or triggers API fetches to build data matrices seamlessly.
- * For now, this uses a robust mock generator to mimic the exact response structure 
- * your backend Express route will return when hooked up to the Gemini API.
+ * Triggers API fetches and saves the path into our collection portfolio
  */
-function triggerPathGeneration() {
+async function triggerPathGeneration() {
     const topicInput = document.getElementById('targetTopic').value.trim();
     const tierInput = document.getElementById('targetLevel').value;
 
@@ -28,77 +39,133 @@ function triggerPathGeneration() {
         return;
     }
 
-    // Mock API Data Generation Map simulating AI structurally sound JSON profiles
-    globalActiveRoadmap = {
-        title: `Mastery Blueprint: ${topicInput} (${tierInput})`,
-        totalEstimatedHours: 18,
-        milestones: [
-            {
-                id: 1,
-                topic: "Phase 1: Fundamental Concepts & Syntactic Setup",
-                description: "Deep dive initialization into the core infrastructure specifications, environment building syntax rules, and primitive types execution models.",
-                estimatedHours: 4,
-                resources: [
-                    { type: "Docs", label: "Reference Guide", query: `https://www.google.com/search?q=${encodeURIComponent(topicInput)}+fundamentals+documentation` },
-                    { type: "Video", label: "Crash Course", query: `https://www.youtube.com/results?search_query=${encodeURIComponent(topicInput)}+beginners+tutorial` }
-                ]
-            },
-            {
-                id: 2,
-                topic: "Phase 2: Intermediate Implementation Patterns",
-                description: "Exploring algorithmic structural layout variations, standard module integrations, and logical processing error bounds strategies.",
-                estimatedHours: 6,
-                resources: [
-                    { type: "GitHub", label: "Code Repositories", query: `https://github.com/search?q=${encodeURIComponent(topicInput)}+examples` }
-                ]
-            },
-            {
-                id: 3,
-                topic: "Phase 3: Optimization, Memory Constraints & Deployment",
-                description: "Advanced compilation methodologies execution safety check frameworks handling complexity management paradigms.",
-                estimatedHours: 8,
-                resources: [
-                    { type: "Exercise", label: "Interactive Sandbox Lab", query: "https://leetcode.com/" }
-                ]
-            }
-        ]
-    };
+    document.getElementById('progressSectionCard').style.display = 'none';
+    document.getElementById('roadmapRenderBox').innerHTML = `
+        <div style="text-align: center; padding: 4rem; color: var(--text-muted);">
+            <h2>🤖 Generating Your AI Path...</h2>
+            <p style="margin-top:0.5rem;">Assembling optimized resources, milestones, and timeline matrices.</p>
+        </div>
+    `;
 
-    // Reset unique tracking arrays cleanly for newly created blueprints
-    userCompletedIndices = [];
+    try {
+        const response = await fetch('http://localhost:3000/generate-path', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ topic: topicInput, level: tierInput })
+        });
 
-    // Persist Structural State Snapshots into the user session
-    localStorage.setItem('active_dashboard_roadmap', JSON.stringify(globalActiveRoadmap));
-    localStorage.setItem('active_dashboard_progress', JSON.stringify(userCompletedIndices));
+        if (!response.ok) throw new Error('Network execution error during retrieval.');
 
+        const newPathData = await response.json();
+        
+        // Build a unique tracking node structure for this specific path session
+        const structuredPathNode = {
+            id: Date.now(), // Unique ID using timestamp
+            title: newPathData.title,
+            totalEstimatedHours: newPathData.totalEstimatedHours,
+            milestones: newPathData.milestones,
+            completedIndices: [] // Unique progress tracker array bound to this path
+        };
+
+        // Add to our global collection array
+        savedPathsCollection.push(structuredPathNode);
+        activePathId = structuredPathNode.id;
+
+        // Save everything to localStorage
+        saveToLocalStorage();
+        
+        // Update both UI sections
+        renderSavedPathsList();
+        renderActiveWorkspace();
+
+    } catch (error) {
+        console.error("Pipeline Communication Error:", error);
+        document.getElementById('roadmapRenderBox').innerHTML = `
+            <div style="text-align: center; padding: 4rem; color: #ef4444;">
+                <h2>Generation Failed</h2>
+                <p style="margin-top: 0.5rem; color: var(--text-muted);">Check server status and API configurations.</p>
+            </div>
+        `;
+    }
+}
+
+/**
+ * Renders the "My Saved Paths" collection switcher menu inside the sidebar
+ */
+function renderSavedPathsList() {
+    // Check if a container element exists in the sidebar, if not create one dynamically
+    let listContainer = document.getElementById('savedPathsMenuBox');
+    
+    if (!listContainer) {
+        const sidebarDiv = document.querySelector('.sidebar > div');
+        listContainer = document.createElement('div');
+        listContainer.id = 'savedPathsMenuBox';
+        listContainer.style.marginTop = '2rem';
+        listContainer.style.borderTop = '1px solid var(--border-color)';
+        listContainer.style.paddingTop = '1.5rem';
+        sidebarDiv.appendChild(listContainer);
+    }
+
+    if (savedPathsCollection.length === 0) {
+        listContainer.innerHTML = '<span style="font-size:0.85rem; color:var(--text-muted);">No courses active yet.</span>';
+        return;
+    }
+
+    let menuHTML = `<h3 style="font-size:0.85rem; text-transform:uppercase; color:var(--text-muted); margin-bottom:0.75rem; letter-spacing:0.05em;">📚 My Learning Paths</h3><div style="display:flex; flex-direction:column; gap:0.5rem;">`;
+
+    savedPathsCollection.forEach(pathNode => {
+        // Calculate historical completion percentage for the sidebar badges
+        const total = pathNode.milestones.length;
+        const checked = pathNode.completedIndices.length;
+        const pct = total > 0 ? Math.round((checked / total) * 100) : 0;
+        
+        const isCurrent = pathNode.id === activePathId;
+
+        menuHTML += `
+            <button onclick="switchActivePath(${pathNode.id})" style="width:100%; text-align:left; padding:0.65rem; border-radius:6px; font-size:0.85rem; border:none; cursor:pointer; display:flex; justify-content:between; align-items:center; transition:all 0.2s;
+                background-color: ${isCurrent ? 'var(--primary)' : 'transparent'};
+                color: ${isCurrent ? 'white' : 'var(--text-main)'};"
+                class="${!isCurrent ? 'hover:bg-gray-700' : ''}">
+                <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:160px; font-weight:${isCurrent ? '600' : '400'};">${pathNode.title}</span>
+                <span style="font-size:0.75rem; background-color:rgba(0,0,0,0.2); padding:2px 6px; border-radius:4px;">${pct}%</span>
+            </button>
+        `;
+    });
+
+    menuHTML += `</div>`;
+    listContainer.innerHTML = menuHTML;
+}
+
+/**
+ * Switcher function allowing users to switch tasks on a click event
+ */
+function switchActivePath(id) {
+    activePathId = id;
+    localStorage.setItem('pathai_active_id', activePathId);
+    renderSavedPathsList();
     renderActiveWorkspace();
 }
 
 /**
- * Compiles structural templates elements into the interface layout tree cleanly.
+ * Compiles structural templates elements for the active path into the workspace
  */
 function renderActiveWorkspace() {
-    if (!globalActiveRoadmap) return;
+    const currentPath = savedPathsCollection.find(p => p.id === activePathId);
+    if (!currentPath) return;
 
-    // Reveal metric progress display tracking container cards elements
     document.getElementById('progressSectionCard').style.display = 'block';
-    document.getElementById('activePathTitle').innerText = globalActiveActiveTitle = globalActiveRoadmap.title;
-    document.getElementById('activePathEstimate').innerText = `Target Execution Envelope: ~${globalActiveRoadmap.totalEstimatedHours} Total Study Hours`;
+    document.getElementById('activePathTitle').innerText = currentPath.title;
+    document.getElementById('activePathEstimate').innerText = `Target Execution Envelope: ~${currentPath.totalEstimatedHours || 0} Total Study Hours`;
 
     const dropZone = document.getElementById('roadmapRenderBox');
-    dropZone.innerHTML = ''; // Wipe out baseline loading indicators
+    dropZone.innerHTML = ''; 
 
-    globalActiveRoadmap.milestones.forEach((node) => {
-        const isNodeChecked = userCompletedIndices.includes(node.id);
+    currentPath.milestones.forEach((node) => {
+        const isNodeChecked = currentPath.completedIndices.includes(node.id);
+        const trackingBadgesMarkup = node.resources ? node.resources.map(res => `
+            <a href="${res.query}" target="_blank" class="resource-tag">🔗 ${res.type}: ${res.label}</a>
+        `).join('') : '';
 
-        // Generate customized badge element layout nodes conditionally
-        const trackingBadgesMarkup = node.resources.map(res => `
-            <a href="${res.query}" target="_blank" class="resource-tag">
-                🔗 ${res.type}: ${res.label}
-            </a>
-        `).join('');
-
-        // Build composite checklist component layout configuration profiles
         const blockWrapper = document.createElement('div');
         blockWrapper.className = `milestone-node ${isNodeChecked ? 'completed' : ''}`;
         blockWrapper.innerHTML = `
@@ -120,30 +187,42 @@ function renderActiveWorkspace() {
 }
 
 /**
- * Handles state toggles when checkboxes switch.
+ * Handles state toggles tied directly to the scoped active array profile context
  */
 function toggleMilestoneTracking(nodeId) {
-    if (userCompletedIndices.includes(nodeId)) {
-        userCompletedIndices = userCompletedIndices.filter(item => item !== nodeId);
+    const currentPath = savedPathsCollection.find(p => p.id === activePathId);
+    if (!currentPath) return;
+
+    if (currentPath.completedIndices.includes(nodeId)) {
+        currentPath.completedIndices = currentPath.completedIndices.filter(item => item !== nodeId);
     } else {
-        userCompletedIndices.push(nodeId);
+        currentPath.completedIndices.push(nodeId);
     }
 
-    localStorage.setItem('active_dashboard_progress', JSON.stringify(userCompletedIndices));
-    renderActiveWorkspace(); // Clean complete repaint loop updates styles layout
+    saveToLocalStorage();
+    renderSavedPathsList(); // Refresh sidebar scores in real-time
+    renderActiveWorkspace(); 
 }
 
 /**
- * Math computation formula rules processing structural metrics values.
+ * Progress bar calculator scoped directly to current active node sizes
  */
 function calculateProgressMetrics() {
-    const totalCount = globalActiveRoadmap.milestones.length;
+    const currentPath = savedPathsCollection.find(p => p.id === activePathId);
+    if (!currentPath || !currentPath.milestones) return;
+
+    const totalCount = currentPath.milestones.length;
     if (totalCount === 0) return;
 
-    const finishedCount = userCompletedIndices.length;
+    const finishedCount = currentPath.completedIndices.length;
     const computedPercentage = Math.round((finishedCount / totalCount) * 100);
 
-    // Apply linear math constraints into layout metrics displays elements
     document.getElementById('dashboardInlineBarFill').style.width = `${computedPercentage}%`;
     document.getElementById('progressPercentageText').innerText = `${computedPercentage}%`;
+}
+
+// Global utility save compression block
+function saveToLocalStorage() {
+    localStorage.setItem('pathai_all_saved_paths', JSON.stringify(savedPathsCollection));
+    localStorage.setItem('pathai_active_id', activePathId);
 }

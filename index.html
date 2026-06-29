@@ -33,9 +33,16 @@
                 </button>
             </div>
 
-            <button class="btn-primary" style="background-color: transparent; border: 1px solid var(--border-color); color: var(--text-muted);" onclick="window.location.href='login.html'">
+            <button class="btn-primary" onclick="logoutUser()">
                 Sign Out Account
             </button>
+
+            <script>
+                function logoutUser() {
+                localStorage.removeItem('loggedInUser'); // Clear the session lock
+                window.location.href = 'login.html';     // Move them back to start
+                }
+            </script>
         </aside>
 
         <main class="main-workspace">
