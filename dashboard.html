@@ -4,14 +4,95 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - PathAI</title>
-    <link rel="stylesheet" href="/public/css/main.css">
+    <link rel="stylesheet" href="public/css/main.css">
     <style>
-        .dashboard-layout { display: flex; min-height: 100vh; }
-        .sidebar { width: 280px; background-color: var(--bg-card); border-right: 1px solid var(--border-color); padding: 2rem; display: flex; flex-direction: column; justify-content: space-between; }
-        .main-content { flex: 1; padding: 3rem; overflow-y: auto; }
-        .milestone-node { background-color: var(--bg-card); border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; display: flex; gap: 1rem; }
-        .progress-bar-bg { width: 100%; height: 8px; background-color: var(--border-color); border-radius: 99px; margin-top: 1rem; overflow: hidden; }
-        .progress-bar-fill { height: 100%; background-color: var(--primary); width: 0%; transition: width 0.3s ease; }
+        .dashboard-layout { 
+            display: flex; 
+            min-height: 100vh; 
+        }
+        
+        /* Responsive Flexbox Sidebar Scaffolding */
+        .sidebar { 
+            width: 280px; 
+            background-color: var(--bg-card); 
+            border-right: 1px solid var(--border-color); 
+            padding: 2rem 1.5rem; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .main-content { 
+            flex: 1; 
+            padding: 3rem; 
+            overflow-y: auto; 
+        }
+
+        /* Stylized & Unified Form Control Groups */
+        .control-group, .form-group {
+            margin-bottom: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-group label, .form-group label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Modernized Search Input Field Matrix Styling */
+        .control-group input[type="text"] {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            color: white;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .control-group input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-hover);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+        }
+
+        /* Metrics Progress Indicators layout map */
+        .progress-bar-bg { 
+            width: 100%; 
+            height: 8px; 
+            background-color: var(--border-color); 
+            border-radius: 99px; 
+            margin-top: 1rem; 
+            overflow: hidden; 
+        }
+
+        .progress-bar-fill { 
+            height: 100%; 
+            background-color: var(--primary); 
+            width: 0%; 
+            transition: width 0.3s ease; 
+        }
+
+        /* Media Query: Break layout flow into stacked rows on small displays */
+        @media (max-width: 768px) {
+            .dashboard-layout {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+                padding: 1.5rem;
+            }
+            .main-content {
+                padding: 1.5rem;
+            }
+        }
     </style>
     <script>
         if (!localStorage.getItem('loggedInUser')) { window.location.href = '/login.html'; }
@@ -21,37 +102,58 @@
 
     <div class="dashboard-layout">
         <aside class="sidebar">
-            <div>
-                <h2 style="color: var(--primary-hover); margin-bottom: 2rem;">🧠 PathAI Workspace</h2>
-                <div class="form-group">
-                    <label>What skill or topic next?</label>
-                    <input type="text" id="targetTopic" placeholder="e.g., C++ Vectors">
+            <div style="display: flex; flex-direction: column; gap: 1.5rem; width: 100%;">
+                <h2 style="color: var(--primary-hover); font-size: 1.5rem; font-weight: 700;">🧠 PathAI Workspace</h2>
+            
+                <div class="control-group">
+                    <label for="targetTopic">What skill or topic next?</label>
+                    <input type="text" id="targetTopic" placeholder="e.g., File Handling in C++" autocomplete="off">
                 </div>
+                
                 <div class="form-group">
-                    <label>Experience Tier</label>
-                    <select id="targetLevel">
+                    <label for="targetLevel">Experience Tier</label>
+                    <select id="targetLevel" style="width: 100%; padding: 0.75rem; background-color: var(--bg-dark); border: 1px solid var(--border-color); color: white; border-radius: 6px; font-size: 0.95rem;">
                         <option value="Beginner">Beginner</option>
                         <option value="Intermediate">Intermediate</option>
                         <option value="Advanced">Advanced</option>
                     </select>
                 </div>
-                <button class="btn-primary" style="width: 100%;" onclick="triggerPathGeneration()">Generate Smart Path</button>
-            </div>
+                
+                <button class="btn-primary" style="width: 100%; padding: 0.75rem; font-size: 0.95rem;" onclick="triggerPathGeneration()">
+                    Generate Smart Path
+                </button>
             
-            <button class="btn-secondary" onclick="logoutUser()">Sign Out</button>
+                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 0.5rem 0;">
+
+                <div>
+                    <h3 style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; font-weight: 600;">
+                        📚 Revisit Lessons
+                    </h3>
+                    <div id="historyContainerBox" style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 200px; overflow-y: auto;">
+                        </div>
+                </div>
+            </div>
+    
+            <button class="btn-secondary" style="width: 100%; margin-top: 2rem; padding: 0.75rem; font-size: 0.9rem;" onclick="logoutUser()">
+                Sign Out Account
+            </button>
         </aside>
 
         <main class="main-content">
-            <section id="progressSectionCard" style="background-color: var(--bg-card); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; display: none;">
+            <section id="progressSectionCard" style="background-color: var(--bg-card); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; display: none; border: 1px solid var(--border-color);">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h2 id="activePathTitle">Path Title</h2>
-                    <h1 id="progressPercentageText" style="color: var(--primary-hover);">0%</h1>
+                    <h2 id="activePathTitle" style="font-size: 1.35rem; font-weight: 700;">Path Title</h2>
+                    <h1 id="progressPercentageText" style="color: var(--primary-hover); font-size: 1.75rem; font-weight: 800;">0%</h1>
                 </div>
-                <div class="progress-bar-bg"><div id="dashboardInlineBarFill" class="progress-bar-fill"></div></div>
+                <div class="progress-bar-bg">
+                    <div id="dashboardInlineBarFill" class="progress-bar-fill"></div>
+                </div>
             </section>
 
             <div id="roadmapRenderBox">
-                <h3 style="color: var(--text-muted); text-align: center; margin-top: 5rem;">No Active Roadmap. Use the sidebar to generate one!</h3>
+                <h3 style="color: var(--text-muted); text-align: center; margin-top: 5rem; font-weight: 500;">
+                    No Active Roadmap. Use the sidebar to generate one!
+                </h3>
             </div>
         </main>
     </div>

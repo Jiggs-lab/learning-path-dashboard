@@ -13,7 +13,8 @@ const PORT = process.env.PORT || 3000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const USERS_FILE = path.join(__dirname, 'users.json');
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+//const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const ai = new GoogleGenAI({});
 
 app.use(cors());
 app.use(express.json());
@@ -51,15 +52,50 @@ app.post('/api/login', (req, res) => {
 
 app.post('/generate-path', async (req, res) => {
     const { topic, level } = req.body;
-    const systemPrompt = `Create a comprehensive roadmap for learning "${topic}" at an "${level}" level. Return strictly a JSON object: {"title": "Mastery Blueprint", "milestones": [{"id": 1, "topic": "Concept", "description": "Learn it", "estimatedHours": 5}]}`;
+
+    if (!topic || !level) {
+        return res.status(400).json({ error: "Missing required parameters: topic and level." });
+    }
+
+    // NEW ENHANCED ADAPTIVE SCHEMA PROMPT
+    const systemPrompt = `You are an expert interactive curriculum architect. Create a structured, milestone-driven learning roadmap for learning "${topic}" tailored precisely for a user at the "${level}" skill tier.
+
+    CRITICAL INSTRUCTIONS BASED ON LEVEL:
+    - If level is "Beginner": Start with fundamental primitives (e.g., variables, constants, basic tags, attributes). Focus on foundational scaffolding.
+    - If level is "Advanced": STRICTLY SKIP all basic primitives. Do NOT include basic variables, intro tags, or installation setups. Jump straight into advanced architectural paradigms (e.g., semantic layouts, interactive/collapsible layers, media responsiveness, optimization matrices, data visualization components).
+    - If level is "Intermediate": Provide a brief transition bridge directly into design patterns, APIs, and intermediate implementations.
+
+    You MUST return your response strictly as a single JSON object matching this exact structural configuration layout schema:
+    {
+      "title": "Adaptive Masterclass: ${topic} (${level})",
+      "modules": [
+        {
+          "moduleName": "Name of Section/Core Phase (e.g., Frontend Architecture)",
+          "topics": [
+            {
+              "id": 101,
+              "label": "Name of specific concept to learn (e.g., Semantic & Structural Elements)",
+              "description": "Short, clear outcome objective of what they will master here.",
+              "estimatedHours": 3,
+              "referenceQuery": "https://www.google.com/search?q=${topic}+advanced+concepts"
+            }
+          ]
+        }
+      ]
+    }`;
+
     try {
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: systemPrompt,
             config: { responseMimeType: "application/json" }
         });
+
         res.json(JSON.parse(response.text));
-    } catch (err) { res.status(500).json({ error: 'Failed' }); }
+    } catch (err) {
+        console.error("Gemini API Pipeline Error:", err);
+        res.status(500).json({ error: 'Failed to construct curriculum models.' });
+    }
 });
 
 app.listen(PORT, () => console.log(`🚀 PathAI Server running at http://localhost:${PORT}`));
