@@ -1,13 +1,18 @@
 let savedPathsCollection = [];
 let activePathId = null;
 
+// NEW: Dynamically grab the current logged-in user token to isolate database sandboxes
+const currentSessionUser = localStorage.getItem('loggedInUser') || 'default_guest';
+const STORAGE_KEY_PATHS = `pathai_paths_${currentSessionUser}`;
+const STORAGE_KEY_ACTIVE = `pathai_active_id_${currentSessionUser}`;
+
 document.addEventListener('DOMContentLoaded', () => {
-    const retainedPaths = localStorage.getItem('pathai_all_saved_paths');
-    const retainedActiveId = localStorage.getItem('pathai_active_id');
+    // FIXED: Reads exclusively from this specific user's sandboxed data array profile
+    const retainedPaths = localStorage.getItem(STORAGE_KEY_PATHS);
+    const retainedActiveId = localStorage.getItem(STORAGE_KEY_ACTIVE);
 
     if (retainedPaths) {
         savedPathsCollection = JSON.parse(retainedPaths);
-        // Safely fall back to the first available roadmap if active id is corrupt
         activePathId = retainedActiveId ? parseInt(retainedActiveId) : (savedPathsCollection.length ? savedPathsCollection[0].id : null);
         renderHistoryPanel();
         if (activePathId) renderActiveWorkspace();
@@ -68,7 +73,7 @@ function renderHistoryPanel() {
         return;
     }
 
-    historyBox.innerHTML = ''; // Clear stale rendering configurations
+    historyBox.innerHTML = ''; 
 
     savedPathsCollection.forEach(path => {
         let totalTopics = 0;
@@ -84,7 +89,12 @@ function renderHistoryPanel() {
         
         const isActive = path.id === activePathId;
 
-        // Container card wrapping button content and the separate delete action trigger
+        let cleanTitle = path.title;
+        if (cleanTitle.includes("Adaptive Masterclass:")) {
+            // Strips out "Adaptive Masterclass: " so you just see "Web Development (Beginner)"
+            cleanTitle = cleanTitle.replace("Adaptive Masterclass:", "").trim();
+        }
+
         const historyBtn = document.createElement('div');
         historyBtn.style.padding = '0.75rem';
         historyBtn.style.backgroundColor = isActive ? 'var(--primary)' : 'var(--bg-dark)';
@@ -92,12 +102,12 @@ function renderHistoryPanel() {
         historyBtn.style.borderRadius = '6px';
         historyBtn.style.cursor = 'pointer';
         historyBtn.style.transition = 'all 0.2s ease';
-        historyBtn.style.position = 'relative'; // Anchors the interactive close toggle button
+        historyBtn.style.position = 'relative'; 
         
         historyBtn.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; padding-right: 1.5rem;">
-                <div style="font-size:0.85rem; font-weight:600; color:white; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width: 170px;">
-                    ${path.title}
+                <div style="font-size:0.85rem; font-weight:600; color:white; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width: 170px;" title="${path.title}">
+                    ${cleanTitle}
                 </div>
                 <span style="font-size:0.75rem; color:${isActive ? 'white' : 'var(--primary-hover)'}; font-weight:700;">${percentage}%</span>
             </div>
@@ -112,7 +122,6 @@ function renderHistoryPanel() {
             </button>
         `;
 
-        // Switch active tracking context when clicking anywhere on the historical card container body
         historyBtn.onclick = (e) => {
             activePathId = path.id;
             saveAndRefresh();
@@ -123,22 +132,20 @@ function renderHistoryPanel() {
 }
 
 /**
- * NEW: Completely wipes a roadmap instance from local memory banks and updates active routes
+ * Wipes a roadmap instance from local memory banks and updates active routes
  */
 function deletePath(event, pathId) {
-    event.stopPropagation(); // CRITICAL: Stops the click from triggering the parent card's "switch active path" behavior!
+    event.stopPropagation(); 
     
     if (!confirm("Are you sure you want to remove this learning roadmap from your history?")) return;
 
-    // Filter out the requested node out of the collector array profile map
     savedPathsCollection = savedPathsCollection.filter(p => p.id !== pathId);
 
-    // Dynamic Route Context Realignment Engine Rules
     if (activePathId === pathId) {
         if (savedPathsCollection.length > 0) {
-            activePathId = savedPathsCollection[0].id; // Re-route to the next available history record block
+            activePathId = savedPathsCollection[0].id; 
         } else {
-            activePathId = null; // Reset to standard dead state landing layout view
+            activePathId = null; 
             document.getElementById('progressSectionCard').style.display = 'none';
             document.getElementById('roadmapRenderBox').innerHTML = `
                 <h3 style="color: var(--text-muted); text-align: center; margin-top: 5rem; font-weight: 500;">
@@ -152,7 +159,7 @@ function deletePath(event, pathId) {
 }
 
 /**
- * Builds nested interactive checkbox interfaces using structured schema normalization templates
+ * Builds nested interactive checkbox interfaces
  */
 function renderActiveWorkspace() {
     const path = savedPathsCollection.find(p => p.id === activePathId);
@@ -254,8 +261,9 @@ function calculateMetrics() {
 }
 
 function saveAndRefresh() {
-    localStorage.setItem('pathai_all_saved_paths', JSON.stringify(savedPathsCollection));
-    localStorage.setItem('pathai_active_id', activePathId);
+    // FIXED: Writes exclusively to the logged-in user's profile slot 
+    localStorage.setItem(STORAGE_KEY_PATHS, JSON.stringify(savedPathsCollection));
+    localStorage.setItem(STORAGE_KEY_ACTIVE, activePathId);
     renderHistoryPanel(); 
     if (activePathId) renderActiveWorkspace();
 }
