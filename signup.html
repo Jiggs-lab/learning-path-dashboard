@@ -3,38 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up - PathAI</title>
-    <link rel="stylesheet" href="public/css/main.css">
+    <title>PathAI - Join Us</title>
+    <link rel="stylesheet" href="/public/css/main.css">
 </head>
-<body>
+<body style="background-color: var(--bg-dark); color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: sans-serif; margin: 0;">
 
-    <div class="auth-wrapper">
-        <div class="auth-card">
-            <h2 style="margin-bottom: 0.5rem; font-size: 1.75rem;">Create Account</h2>
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem;">Get your personalized learning roadmaps today.</p>
-            
-            <form id="signupForm">
-                <div class="form-group">
-                    <label for="userName">Full Name</label>
-                    <input type="text" id="userName" required placeholder="John Doe" autocomplete="name">
-                </div>
-                <div class="form-group">
-                    <label for="userEmail">Email Address</label>
-                    <input type="email" id="userEmail" required placeholder="you@example.com" autocomplete="email">
-                </div>
-                <div class="form-group">
-                    <label for="userPassword">Password</label>
-                    <input type="password" id="userPassword" required placeholder="••••••••" autocomplete="new-password">
-                </div>
-                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 0.5rem;">Sign Up</button>
-            </form>
-            
-            <p style="margin-top: 1.5rem; text-align: center; font-size: 0.9rem; color: var(--text-muted);">
-                Already have an account? <a href="login.html" style="color: var(--primary-hover); text-decoration: none; font-weight: 500;">Log In</a>
-            </p>
-        </div>
+    <div style="background-color: var(--bg-card); border: 1px solid var(--border-color); padding: 2.5rem; border-radius: 12px; width: 100%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+        <h2 style="color: white; margin-bottom: 0.5rem; text-align: center; font-size: 1.75rem;">Create Account</h2>
+        <p style="color: var(--text-muted); font-size: 0.9rem; text-align: center; margin-bottom: 2rem;">Build your profile to start architecting structured AI roadmaps.</p>
+
+        <form id="signupForm" style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">Full Name</label>
+                <input type="text" id="name" required style="padding: 0.75rem; background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 6px; color: white; font-size: 0.95rem;">
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">Email Address</label>
+                <input type="email" id="email" required style="padding: 0.75rem; background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 6px; color: white; font-size: 0.95rem;">
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-main);">Password</label>
+                <input type="password" id="password" required style="padding: 0.75rem; background-color: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 6px; color: white; font-size: 0.95rem;">
+            </div>
+
+            <button type="submit" style="padding: 0.75rem; background-color: var(--primary); border: none; border-radius: 6px; color: white; font-weight: 600; font-size: 1rem; cursor: pointer; transition: background 0.2s; margin-top: 0.5rem;">
+                Sign Up
+            </button>
+        </form>
+
+        <p style="text-align: center; margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-muted);">
+            Already have an account? <a href="/login.html" style="color: var(--primary-hover); text-decoration: none; font-weight: 600;">Log In</a>
+        </p>
     </div>
 
-    <script src="public/js/auth.js"></script>
+    <script>
+        const signupForm = document.getElementById('signupForm');
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                // FIXED: Hits '/api/signup' relatively instead of 'http://localhost:3000/api/signup'
+                const response = await fetch('/api/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('Account registered successfully! Redirecting to login page...');
+                    window.location.href = '/login.html';
+                } else {
+                    alert(data.message || 'Registration failed. The email address might already be in use.');
+                }
+            } catch (err) {
+                console.error("Authentication Signup Pipeline Failure:", err);
+                alert('Could not connect to the authentication server.');
+            }
+        });
+    </script>
 </body>
 </html>

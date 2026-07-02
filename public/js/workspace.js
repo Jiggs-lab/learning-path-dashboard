@@ -1,13 +1,12 @@
 let savedPathsCollection = [];
 let activePathId = null;
 
-// NEW: Dynamically grab the current logged-in user token to isolate database sandboxes
+// Dynamically grab the current logged-in user token to isolate database sandboxes
 const currentSessionUser = localStorage.getItem('loggedInUser') || 'default_guest';
 const STORAGE_KEY_PATHS = `pathai_paths_${currentSessionUser}`;
 const STORAGE_KEY_ACTIVE = `pathai_active_id_${currentSessionUser}`;
 
 document.addEventListener('DOMContentLoaded', () => {
-    // FIXED: Reads exclusively from this specific user's sandboxed data array profile
     const retainedPaths = localStorage.getItem(STORAGE_KEY_PATHS);
     const retainedActiveId = localStorage.getItem(STORAGE_KEY_ACTIVE);
 
@@ -20,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Communicates with backend port 3000 to fetch adaptive paths
+ * Communicates with backend to fetch adaptive paths using relative URL mapping
  */
 async function triggerPathGeneration() {
     const topic = document.getElementById('targetTopic').value.trim();
@@ -37,7 +36,8 @@ async function triggerPathGeneration() {
     `;
 
     try {
-        const response = await fetch('http://localhost:3000/generate-path', {
+        // FIXED: Swapped 'http://localhost:3000/generate-path' with a relative URL
+        const response = await fetch('/generate-path', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ topic, level })
@@ -91,7 +91,6 @@ function renderHistoryPanel() {
 
         let cleanTitle = path.title;
         if (cleanTitle.includes("Adaptive Masterclass:")) {
-            // Strips out "Adaptive Masterclass: " so you just see "Web Development (Beginner)"
             cleanTitle = cleanTitle.replace("Adaptive Masterclass:", "").trim();
         }
 
@@ -261,7 +260,6 @@ function calculateMetrics() {
 }
 
 function saveAndRefresh() {
-    // FIXED: Writes exclusively to the logged-in user's profile slot 
     localStorage.setItem(STORAGE_KEY_PATHS, JSON.stringify(savedPathsCollection));
     localStorage.setItem(STORAGE_KEY_ACTIVE, activePathId);
     renderHistoryPanel(); 
