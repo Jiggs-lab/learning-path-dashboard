@@ -12,12 +12,17 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 const USERS_FILE = path.join(__dirname, 'users.json');
-//const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+// Initializes SDK using standard environment variable assignments cleanly
 const ai = new GoogleGenAI({});
 
 app.use(cors());
 app.use(express.json());
+
+// FIXED: Double-layer static mount shields relative asset directories from breaking
+app.use(express.static(path.join(__dirname, 'public')));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // Database File Utils
@@ -57,7 +62,7 @@ app.post('/generate-path', async (req, res) => {
         return res.status(400).json({ error: "Missing required parameters: topic and level." });
     }
 
-    // NEW ENHANCED ADAPTIVE SCHEMA PROMPT
+    // ENHANCED: Directs Gemini to generate specialized URL documentation links per topic block item dynamically
     const systemPrompt = `You are an expert interactive curriculum architect. Create a structured, milestone-driven learning roadmap for learning "${topic}" tailored precisely for a user at the "${level}" skill tier.
 
     CRITICAL INSTRUCTIONS BASED ON LEVEL:
@@ -77,7 +82,7 @@ app.post('/generate-path', async (req, res) => {
               "label": "Name of specific concept to learn (e.g., Semantic & Structural Elements)",
               "description": "Short, clear outcome objective of what they will master here.",
               "estimatedHours": 3,
-              "referenceQuery": "https://www.google.com/search?q=${topic}+advanced+concepts"
+              "referenceQuery": "Provide a high-quality Google Search URL targeting documentation for this specific concept node (e.g., 'https://www.google.com/search?q=mdn+html+semantic+elements')"
             }
           ]
         }
